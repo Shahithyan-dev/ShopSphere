@@ -156,7 +156,7 @@ router.post('/create-direct-order', requireLogin, async (req, res) => {
     });
   } catch (err) {
     console.error('Create direct order error:', err);
-    res.status(500).json({ success: false, message: 'Could not create order. Please try again.' });
+    res.status(500).json({ success: false, message: err.message || 'Could not create order. Please try again.' });
   }
 });
 
