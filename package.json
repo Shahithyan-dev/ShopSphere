@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  },
+  "scripts": {
+    "frontend": "npm run watch --prefix shopsphere-react",
+    "backend": "npm run dev --prefix shopsphere",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  }
+}

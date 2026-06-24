@@ -1,0 +1,61 @@
+:root {
+  /* Primary brand palette — maroon/wine + gold */
+  --maroon-dark: #4a0e1f;
+  --maroon-main: #7a1530;
+  --gold: #d4a017;
+  --gold-bright: #f0c040;
+  --gold-pale: #fdf6e3;
+
+  /* Secondary accent palette — charcoal + electric blue */
+  --charcoal: #1f2229;
+  --charcoal-light: #2d313c;
+  --electric-blue: #2979ff;
+
+  --cream: #faf8f5;
+  --text-dark: #1c1c1c;
+  --text-muted: #6b7280;
+  --border-light: #e5e7eb;
+  --price-strike: #9ca3af;
+  --danger: #e74c3c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+.page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 75px;
+  }
+}

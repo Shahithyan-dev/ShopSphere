@@ -1,0 +1,76 @@
+/* src/components/OtpModal.css */
+
+.otp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.otp-modal {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.otp-modal h2 {
+  margin-top: 0;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #333;
+}
+
+.otp-modal input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  margin: 0.8rem 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.otp-modal input:focus {
+  border-color: #4a90e2;
+}
+
+.otp-modal button {
+  min-width: 110px;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.primary-btn {
+  background: #4a90e2;
+  color: #fff;
+}
+
+.secondary-btn {
+  background: #f2f2f2;
+  color: #333;
+  margin-left: 0.6rem;
+}
+
+.status-message {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.status-message.success { color: #2e7d32; }
+.status-message.error   { color: #c62828; }
