@@ -57,6 +57,7 @@ export const adminDeleteProduct = (id) => api.delete(`/products/admin/${id}`);
 
 // --- Payment (Razorpay) ---
 export const createPaymentOrder = (payload) => api.post('/payment/create-order', payload || {});
+export const createDirectPaymentOrder = (payload) => api.post('/payment/create-direct-order', payload || {});
 export const verifyPayment = (payload) => api.post('/payment/verify', payload);
 export const getOrders = () => api.get('/payment/orders');
 export const cancelOrder = (orderId) => api.delete(`/payment/orders/${orderId}/cancel`);

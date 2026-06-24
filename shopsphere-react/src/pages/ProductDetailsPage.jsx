@@ -6,12 +6,14 @@ import CartDrawer from '../components/CartDrawer';
 import { getProductById } from '../api/client';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useCheckout } from '../hooks/useCheckout';
 import './ProductDetailsPage.css';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { addItem } = useCart();
+  const { status, startDirectCheckout } = useCheckout();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -126,6 +128,38 @@ export default function ProductDetailsPage() {
             >
               {added ? 'Added ✓' : 'Add to Cart'}
             </button>
+
+            <button
+              className="pd-buynow-btn"
+              onClick={async () => {
+                if (!user) {
+                  alert("Please log in to buy products.");
+                  return;
+                }
+                if (user?.isAdmin) {
+                  alert("Admin accounts cannot buy products.");
+                  return;
+                }
+                const address = prompt("Please enter delivery address:");
+                if (!address) return;
+                
+                try {
+                  await startDirectCheckout(product.id, 1, { delivery_address: address });
+                } catch (err) {
+                  console.error(err);
+                  alert("Checkout failed.");
+                }
+              }}
+              disabled={product.stock <= 0}
+            >
+              Buy Now
+            </button>
+
+            {status.message && (
+              <div className={`checkout-status ${status.stage}`} style={{ margin: '10px 0', fontSize: '14px', fontWeight: 'bold' }}>
+                {status.message}
+              </div>
+            )}
 
             {/* Extra details the user requested */}
             <div className="pd-extra-details">

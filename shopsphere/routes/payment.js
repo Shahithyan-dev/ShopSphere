@@ -18,6 +18,7 @@ function requireLogin(req, res, next) {
 
 router.post('/create-order', requireLogin, async (req, res) => {
   try {
+    const { delivery_address, delivery_location } = req.body;
     if (!razorpayEnabled) {
       return res.status(503).json({
         success: false,
@@ -91,6 +92,74 @@ router.post('/create-order', requireLogin, async (req, res) => {
   }
 });
 
+router.post('/create-direct-order', requireLogin, async (req, res) => {
+  try {
+    const { productId, quantity, delivery_address, delivery_location, currency: reqCurrency } = req.body;
+    if (!razorpayEnabled) {
+      return res.status(503).json({
+        success: false,
+        message: 'Payments are not configured yet. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to .env.'
+      });
+    }
+
+    const product = await Product.findById(productId).lean();
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+
+    const qty = parseInt(quantity) || 1;
+    if (qty > product.stock) {
+      return res.status(400).json({
+        success: false,
+        message: `"${product.name}" only has ${product.stock} left in stock.`
+      });
+    }
+
+    const totalAmount = product.price * qty;
+    const amountInPaise = Math.round(totalAmount * 100);
+
+    const currency = allowInternational ? (reqCurrency || 'INR') : 'INR';
+    const razorpayOrder = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: currency,
+      receipt: `rcpt_dir_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+    });
+
+    const order = await Order.create({
+      user_id: req.session.user.id,
+      razorpay_order_id: razorpayOrder.id,
+      amount: totalAmount,
+      currency: currency,
+      status: 'created',
+      delivery_address: delivery_address || null,
+      delivery_location: delivery_location ? {
+        latitude: delivery_location.latitude,
+        longitude: delivery_location.longitude
+      } : null
+    });
+
+    await OrderItem.create({
+      order_id: order._id,
+      product_id: product._id,
+      product_name: product.name,
+      price: product.price,
+      quantity: qty
+    });
+
+    res.json({
+      success: true,
+      orderId: razorpayOrder.id,
+      amount: amountInPaise,
+      currency: currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      dbOrderId: order._id.toString()
+    });
+  } catch (err) {
+    console.error('Create direct order error:', err);
+    res.status(500).json({ success: false, message: 'Could not create order. Please try again.' });
+  }
+});
+
 router.post('/verify', requireLogin, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -131,7 +200,19 @@ router.post('/verify', requireLogin, async (req, res) => {
       }
     }
 
-    await CartItem.deleteMany({ user_id: req.session.user.id });
+    let isDirect = false;
+    try {
+      const rpOrder = await razorpay.orders.fetch(order.razorpay_order_id);
+      if (rpOrder && rpOrder.receipt && rpOrder.receipt.includes('dir')) {
+        isDirect = true;
+      }
+    } catch (rpErr) {
+      console.error('Error fetching Razorpay order receipt:', rpErr);
+    }
+
+    if (!isDirect) {
+      await CartItem.deleteMany({ user_id: req.session.user.id });
+    }
 
     res.json({ success: true, message: 'Payment verified! Your order is confirmed.' });
   } catch (err) {

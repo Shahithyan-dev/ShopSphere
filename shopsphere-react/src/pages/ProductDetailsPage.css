@@ -153,7 +153,34 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  margin-bottom: 12px;
+}
+
+.pd-buynow-btn {
+  background: var(--gold);
+  color: var(--charcoal);
+  border: none;
+  padding: 18px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 40px;
+}
+
+.pd-buynow-btn:hover:not(:disabled) {
+  background: var(--gold-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.pd-buynow-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .pd-add-btn:hover:not(:disabled) {
