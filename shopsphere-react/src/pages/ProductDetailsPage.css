@@ -142,7 +142,15 @@
 .in-stock { color: #28a745; }
 .out-of-stock { color: var(--danger); }
 
+.pd-actions-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
 .pd-add-btn {
+  flex: 1;
   background: var(--maroon-main);
   color: white;
   border: none;
@@ -153,10 +161,10 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  margin-bottom: 12px;
 }
 
 .pd-buynow-btn {
+  flex: 1;
   background: var(--gold);
   color: var(--charcoal);
   border: none;
@@ -167,7 +175,6 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 40px;
 }
 
 .pd-buynow-btn:hover:not(:disabled) {
