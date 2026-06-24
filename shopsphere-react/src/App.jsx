@@ -11,6 +11,7 @@ import ShopPage from './pages/ShopPage';
 import AdminPage from './pages/AdminPage';
 import OrdersPage from './pages/OrdersPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
+import AddressPage from './pages/AddressPage';
 
 function AppContent() {
   const { triggerCelebration } = useCelebration();
@@ -35,6 +36,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <ProductDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout-address"
+          element={
+            <ProtectedRoute>
+              <AddressPage />
             </ProtectedRoute>
           }
         />

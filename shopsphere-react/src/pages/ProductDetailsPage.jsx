@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { ProductVisual } from '../components/ProductCard';
 import CartDrawer from '../components/CartDrawer';
@@ -11,6 +11,7 @@ import './ProductDetailsPage.css';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
   const { status, startDirectCheckout } = useCheckout();
@@ -132,7 +133,7 @@ export default function ProductDetailsPage() {
 
               <button
                 className="pd-buynow-btn"
-                onClick={async () => {
+                onClick={() => {
                   if (!user) {
                     alert("Please log in to buy products.");
                     return;
@@ -141,15 +142,14 @@ export default function ProductDetailsPage() {
                     alert("Admin accounts cannot buy products.");
                     return;
                   }
-                  const address = prompt("Please enter delivery address:");
-                  if (!address) return;
-                  
-                  try {
-                    await startDirectCheckout(product.id, 1, { delivery_address: address });
-                  } catch (err) {
-                    console.error(err);
-                    alert("Checkout failed.");
-                  }
+                  navigate('/checkout-address', {
+                    state: {
+                      productId: product.id,
+                      quantity: 1,
+                      productName: product.name,
+                      price: product.price
+                    }
+                  });
                 }}
                 disabled={product.stock <= 0}
               >
