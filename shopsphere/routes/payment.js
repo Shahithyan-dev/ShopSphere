@@ -18,7 +18,7 @@ function requireLogin(req, res, next) {
 
 router.post('/create-order', requireLogin, async (req, res) => {
   try {
-    const { delivery_address, delivery_location } = req.body;
+    const { delivery_address, delivery_location } = req.body || {};
     if (!razorpayEnabled) {
       return res.status(503).json({
         success: false,
@@ -94,7 +94,7 @@ router.post('/create-order', requireLogin, async (req, res) => {
 
 router.post('/create-direct-order', requireLogin, async (req, res) => {
   try {
-    const { productId, quantity, delivery_address, delivery_location, currency: reqCurrency } = req.body;
+    const { productId, quantity, delivery_address, delivery_location, currency: reqCurrency } = req.body || {};
     if (!razorpayEnabled) {
       return res.status(503).json({
         success: false,
