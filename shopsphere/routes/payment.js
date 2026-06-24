@@ -158,6 +158,49 @@ router.get('/orders', requireLogin, async (req, res) => {
   }
 });
 
+router.delete('/orders/:orderId/cancel', requireLogin, async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.orderId, user_id: req.session.user.id });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Order is already cancelled.' });
+    }
+
+    if (['shipped', 'delivered', 'failed', 'rejected'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: `Cannot cancel order in ${order.status} status.` });
+    }
+
+    const createdTime = new Date(order.created_at).getTime();
+    const timeDiffMs = Date.now() - createdTime;
+    const hoursElapsed = timeDiffMs / (1000 * 60 * 60);
+
+    if (hoursElapsed > 30) {
+      return res.status(400).json({ success: false, message: 'Cancellation window (30 hours) has expired.' });
+    }
+
+    // Revert stock of products
+    const items = await OrderItem.find({ order_id: order._id }).lean();
+    for (const item of items) {
+      const product = await Product.findById(item.product_id);
+      if (product) {
+        product.stock = product.stock + item.quantity;
+        await product.save();
+      }
+    }
+
+    order.status = 'cancelled';
+    await order.save();
+
+    res.json({ success: true, message: 'Order cancelled successfully and stock restored.' });
+  } catch (err) {
+    console.error('Cancel order error:', err);
+    res.status(500).json({ success: false, message: 'Server error cancelling order.' });
+  }
+});
+
 function requireAdmin(req, res, next) {
   if (!req.session.user) {
     return res.status(401).json({ success: false, message: 'Please log in first.' });
@@ -190,7 +233,7 @@ router.get('/admin/orders', requireAdmin, async (req, res) => {
 router.put('/admin/orders/:orderId/status', requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
-    const validStatuses = ['created', 'paid', 'failed', 'accepted', 'rejected', 'shipped', 'delivered'];
+    const validStatuses = ['created', 'paid', 'failed', 'accepted', 'rejected', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid order status.' });
     }

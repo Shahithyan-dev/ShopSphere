@@ -2,16 +2,13 @@ import { useState } from 'react';
 import { createPaymentOrder, verifyPayment } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useCelebration } from '../context/CelebrationContext';
 
-// Encapsulates the full Razorpay flow:
-// 1. Ask our backend to create a Razorpay order from the current cart.
-// 2. Open Razorpay's own Checkout popup (loaded via the <script> tag in index.html).
-// 3. When the person completes payment, send the result back to our backend
-//    to verify the signature — this is the step that actually confirms the
-//    payment is real, not just "the popup closed without erroring."
+// Encapsulates the transition / checkout logic
 export function useCheckout() {
   const { user } = useAuth();
   const { refreshCart } = useCart();
+  const { startCelebration } = useCelebration();
   const [status, setStatus] = useState({ stage: 'idle', message: '' }); // idle | processing | success | error
 
   const startCheckout = async (deliveryDetails) => {
@@ -53,6 +50,7 @@ export function useCheckout() {
 
         if (verifyData.success) {
           setStatus({ stage: 'success', message: 'Payment successful! Your order is confirmed.' });
+          startCelebration();
           await refreshCart();
         } else {
           setStatus({ stage: 'error', message: verifyData.message || 'Payment verification failed.' });

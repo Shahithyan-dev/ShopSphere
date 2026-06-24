@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
-import { getOrders } from '../api/client';
+import { getOrders, cancelOrder } from '../api/client';
 import { ProductVisual } from '../components/ProductCard';
 import CartDrawer from '../components/CartDrawer';
 import './OrdersPage.css';
@@ -11,25 +11,75 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
+
+  // Hook up timer tick to force refresh calculation on cancelable orders
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  async function loadOrders() {
+    try {
+      const data = await getOrders();
+      if (data.success) {
+        setOrders(data.orders);
+      } else {
+        setError(data.message || 'Failed to retrieve orders.');
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Server error fetching orders.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadOrders() {
-      try {
-        const data = await getOrders();
-        if (data.success) {
-          setOrders(data.orders);
-        } else {
-          setError(data.message || 'Failed to retrieve orders.');
-        }
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Server error fetching orders.');
-      } finally {
-        setLoading(false);
-      }
-    }
     loadOrders();
   }, []);
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order? All items will be cancelled and stock will be returned.")) {
+      return;
+    }
+    setCancellingId(orderId);
+    try {
+      const res = await cancelOrder(orderId);
+      if (res.success) {
+        alert("Order cancelled successfully!");
+        await loadOrders();
+      } else {
+        alert(res.message || "Failed to cancel order.");
+      }
+    } catch (err) {
+      console.error("Cancel order error:", err);
+      alert("Error cancelling order.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const isCancelable = (order) => {
+    if (['cancelled', 'shipped', 'delivered', 'failed', 'rejected'].includes(order.status)) {
+      return false;
+    }
+    const createdTime = new Date(order.created_at).getTime();
+    const timeDiffMs = Date.now() - createdTime;
+    const hoursElapsed = timeDiffMs / (1000 * 60 * 60);
+    return hoursElapsed < 30;
+  };
+
+  const getRemainingTimeStr = (order) => {
+    const createdTime = new Date(order.created_at).getTime();
+    const expiryTime = createdTime + (30 * 60 * 60 * 1000);
+    const remainingMs = expiryTime - Date.now();
+    if (remainingMs <= 0) return '';
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `Cancel window: ${hours}h ${minutes}m left`;
+  };
 
   const getStatusStep = (status) => {
     switch (status) {
@@ -38,6 +88,7 @@ export default function OrdersPage() {
       case 'accepted': return 2;
       case 'shipped': return 3;
       case 'delivered': return 4;
+      case 'cancelled': return -2;
       case 'rejected': return -1;
       default: return 1;
     }
@@ -155,7 +206,7 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Order Progress Tracker */}
-                  {order.status !== 'rejected' && order.status !== 'failed' && (
+                  {order.status !== 'rejected' && order.status !== 'failed' && order.status !== 'cancelled' && (
                     <div className="tracker-timeline">
                       <div className={`timeline-step ${currentStep >= 1 ? 'completed' : ''} ${currentStep === 1 ? 'active' : ''}`}>
                         <div className="step-circle">✓</div>
@@ -173,6 +224,25 @@ export default function OrdersPage() {
                         <div className="step-circle">✓</div>
                         <div className="step-label">Delivered</div>
                       </div>
+                    </div>
+                  )}
+
+                  {isCancelable(order) && (
+                    <div className="order-cancel-section">
+                      <span className="cancel-timer-text">⏰ {getRemainingTimeStr(order)}</span>
+                      <button
+                        className="cancel-order-btn"
+                        onClick={() => handleCancelOrder(order.id)}
+                        disabled={cancellingId === order.id}
+                      >
+                        {cancellingId === order.id ? 'Cancelling...' : 'Cancel Order'}
+                      </button>
+                    </div>
+                  )}
+
+                  {order.status === 'cancelled' && (
+                    <div className="cancelled-alert">
+                      🚫 This order was cancelled by you. If payment was made, it will be refunded automatically.
                     </div>
                   )}
 

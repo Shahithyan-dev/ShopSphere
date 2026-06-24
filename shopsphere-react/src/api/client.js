@@ -59,6 +59,7 @@ export const adminDeleteProduct = (id) => api.delete(`/products/admin/${id}`);
 export const createPaymentOrder = (payload) => api.post('/payment/create-order', payload || {});
 export const verifyPayment = (payload) => api.post('/payment/verify', payload);
 export const getOrders = () => api.get('/payment/orders');
+export const cancelOrder = (orderId) => api.delete(`/payment/orders/${orderId}/cancel`);
 export const adminGetOrders = () => api.get('/payment/admin/orders');
 export const adminUpdateOrderStatus = (orderId, status) => api.put(`/payment/admin/orders/${orderId}/status`, { status });
 

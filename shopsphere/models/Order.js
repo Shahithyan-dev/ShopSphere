@@ -6,7 +6,7 @@ const orderSchema = new mongoose.Schema({
   razorpay_payment_id: { type: String, default: null, trim: true },
   amount: { type: Number, required: true },
   currency: { type: String, default: 'INR', trim: true },
-  status: { type: String, enum: ['created', 'paid', 'failed', 'accepted', 'rejected', 'shipped', 'delivered'], default: 'created' },
+  status: { type: String, enum: ['created', 'paid', 'failed', 'accepted', 'rejected', 'shipped', 'delivered', 'cancelled'], default: 'created' },
   deliveryOtp: { type: String, default: null },
   otpExpiresAt: { type: Date, default: null },
   delivery_address: { type: String, default: null },
