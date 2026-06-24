@@ -95,6 +95,7 @@ router.post('/create-order', requireLogin, async (req, res) => {
 router.post('/create-direct-order', requireLogin, async (req, res) => {
   try {
     const { productId, quantity, delivery_address, delivery_location, currency: reqCurrency } = req.body || {};
+    console.log('Direct Checkout Params:', { productId, quantity, delivery_address, delivery_location });
     if (!razorpayEnabled) {
       return res.status(503).json({
         success: false,
@@ -102,10 +103,15 @@ router.post('/create-direct-order', requireLogin, async (req, res) => {
       });
     }
 
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Missing product ID.' });
+    }
+
     const product = await Product.findById(productId).lean();
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found.' });
     }
+    console.log('Direct Checkout Product:', product.name, product.price);
 
     const qty = parseInt(quantity) || 1;
     if (qty > product.stock) {
@@ -119,32 +125,55 @@ router.post('/create-direct-order', requireLogin, async (req, res) => {
     const amountInPaise = Math.round(totalAmount * 100);
 
     const currency = allowInternational ? (reqCurrency || 'INR') : 'INR';
-    const razorpayOrder = await razorpay.orders.create({
-      amount: amountInPaise,
-      currency: currency,
-      receipt: `rcpt_dir_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
-    });
+    console.log('Creating Razorpay order...');
+    let razorpayOrder;
+    try {
+      razorpayOrder = await razorpay.orders.create({
+        amount: amountInPaise,
+        currency: currency,
+        receipt: `rcpt_dir_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+      });
+    } catch (rzpError) {
+      console.error('Razorpay order creation failed:', rzpError);
+      return res.status(500).json({ success: false, message: `Razorpay Error: ${rzpError.message || rzpError}` });
+    }
+    console.log('Razorpay order created successfully:', razorpayOrder.id);
 
-    const order = await Order.create({
-      user_id: req.session.user.id,
-      razorpay_order_id: razorpayOrder.id,
-      amount: totalAmount,
-      currency: currency,
-      status: 'created',
-      delivery_address: delivery_address || null,
-      delivery_location: delivery_location ? {
-        latitude: delivery_location.latitude,
-        longitude: delivery_location.longitude
-      } : null
-    });
+    console.log('Creating DB Order document...');
+    let order;
+    try {
+      order = await Order.create({
+        user_id: req.session.user.id,
+        razorpay_order_id: razorpayOrder.id,
+        amount: totalAmount,
+        currency: currency,
+        status: 'created',
+        delivery_address: delivery_address || null,
+        delivery_location: delivery_location ? {
+          latitude: delivery_location.latitude,
+          longitude: delivery_location.longitude
+        } : null
+      });
+    } catch (dbOrderErr) {
+      console.error('DB Order creation failed:', dbOrderErr);
+      return res.status(500).json({ success: false, message: `DB Order Error: ${dbOrderErr.message}` });
+    }
+    console.log('DB Order document created:', order._id.toString());
 
-    await OrderItem.create({
-      order_id: order._id,
-      product_id: product._id,
-      product_name: product.name,
-      price: product.price,
-      quantity: qty
-    });
+    console.log('Creating DB OrderItem document...');
+    try {
+      await OrderItem.create({
+        order_id: order._id,
+        product_id: product._id,
+        product_name: product.name,
+        price: product.price,
+        quantity: qty
+      });
+    } catch (dbItemErr) {
+      console.error('DB OrderItem creation failed:', dbItemErr);
+      return res.status(500).json({ success: false, message: `DB OrderItem Error: ${dbItemErr.message}` });
+    }
+    console.log('DB OrderItem created successfully.');
 
     res.json({
       success: true,
@@ -155,7 +184,7 @@ router.post('/create-direct-order', requireLogin, async (req, res) => {
       dbOrderId: order._id.toString()
     });
   } catch (err) {
-    console.error('Create direct order error:', err);
+    console.error('Create direct order general error:', err);
     res.status(500).json({ success: false, message: err.message || 'Could not create order. Please try again.' });
   }
 });
