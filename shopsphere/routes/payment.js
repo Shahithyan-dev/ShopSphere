@@ -135,7 +135,8 @@ router.post('/create-direct-order', requireLogin, async (req, res) => {
       });
     } catch (rzpError) {
       console.error('Razorpay order creation failed:', rzpError);
-      return res.status(500).json({ success: false, message: `Razorpay Error: ${rzpError.message || rzpError}` });
+      const errMsg = typeof rzpError === 'object' ? JSON.stringify(rzpError) : String(rzpError);
+      return res.status(500).json({ success: false, message: `Razorpay Error: ${errMsg}` });
     }
     console.log('Razorpay order created successfully:', razorpayOrder.id);
 
