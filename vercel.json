@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "npm run build --prefix shopsphere-react",
-  "installCommand": "npm install --prefix shopsphere && npm install --prefix shopsphere-react",
+  "buildCommand": "npm install --prefix shopsphere && npm install --prefix shopsphere-react && npm run build --prefix shopsphere-react",
   "outputDirectory": "shopsphere-react/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/shopsphere/server.js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
