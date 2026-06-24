@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const passport = require('./config/passport');
 require('dotenv').config();
 require('./config/db');
@@ -24,6 +25,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_change_me',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/shopsphere',
+    collectionName: 'sessions'
+  }),
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     httpOnly: true
