@@ -17,10 +17,10 @@ export function useCheckout() {
     const orderData = await createPaymentOrder(deliveryDetails);
     if (!orderData.success) {
       setStatus({ stage: 'error', message: orderData.message || 'Could not start checkout.' });
-      return;
+      return false;
     }
 
-    await openRazorpay(orderData);
+    return await openRazorpay(orderData);
   };
 
   const startDirectCheckout = async (productId, quantity, deliveryDetails) => {
@@ -33,10 +33,10 @@ export function useCheckout() {
     });
     if (!orderData.success) {
       setStatus({ stage: 'error', message: orderData.message || 'Could not start checkout.' });
-      return;
+      return false;
     }
 
-    await openRazorpay(orderData);
+    return await openRazorpay(orderData);
   };
 
   const openRazorpay = async (orderData) => {
