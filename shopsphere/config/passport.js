@@ -20,7 +20,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback'
+    callbackURL: '/api/auth/google/callback',
+    proxy: true
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       const googleId = profile.id;
@@ -70,7 +71,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: '/api/auth/facebook/callback',
-    profileFields: ['id', 'displayName', 'emails']
+    profileFields: ['id', 'displayName', 'emails'],
+    proxy: true
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       const facebookId = profile.id;
