@@ -118,7 +118,7 @@ router.post('/logout', (req, res) => {
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login?error=google_failed' }),
+  passport.authenticate('google', { failureRedirect: '/#/login?error=google_failed' }),
   (req, res) => {
     req.session.user = {
       id: req.user.id,
@@ -126,14 +126,14 @@ router.get('/google/callback',
       email: req.user.email,
       isAdmin: false
     };
-    res.redirect('/shop');
+    res.redirect('/#/shop');
   }
 );
 
 router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
 router.get('/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login?error=facebook_failed' }),
+  passport.authenticate('facebook', { failureRedirect: '/#/login?error=facebook_failed' }),
   (req, res) => {
     req.session.user = {
       id: req.user.id,
@@ -141,7 +141,7 @@ router.get('/facebook/callback',
       email: req.user.email,
       isAdmin: false
     };
-    res.redirect('/shop');
+    res.redirect('/#/shop');
   }
 );
 
